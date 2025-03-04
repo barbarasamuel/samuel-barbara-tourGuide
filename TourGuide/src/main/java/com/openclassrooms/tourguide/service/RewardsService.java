@@ -1,7 +1,11 @@
 package com.openclassrooms.tourguide.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import gpsUtil.GpsUtil;
@@ -35,11 +39,57 @@ public class RewardsService {
 	public void setDefaultProximityBuffer() {
 		proximityBuffer = defaultProximityBuffer;
 	}
-	
+
+	@Async("taskExecutor")
 	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
+
+		Map<Location, VisitedLocation> userVisitedLocationMap = new ConcurrentHashMap<>();
+
+		for (VisitedLocation userVisitedLocation : user.getVisitedLocations()) {
+			userVisitedLocationMap.put(userVisitedLocation.location, userVisitedLocation);
+		}
+
+		//List<VisitedLocation> userLocations = user.getVisitedLocations();
 		List<Attraction> attractions = gpsUtil.getAttractions();
-		
+
+		// Use ConcurrentHashMap to avoid ConcurrentModificationException and make better the performances
+		Map<String, UserReward> userRewardsMap = new ConcurrentHashMap<>();
+
+		for (UserReward reward : user.getUserRewards()) {
+			userRewardsMap.put(user.getUserName(), reward);
+		}
+
+		for (Map.Entry<Location, VisitedLocation> entry: userVisitedLocationMap.entrySet()) {
+
+	//VisitedLocation visitedLocation : userLocations) {
+			for (Attraction attraction : attractions) {
+				if (!userRewardsMap.containsKey(attraction.attractionName)) {
+					if (nearAttraction(entry.getValue(), attraction)) {
+						UserReward newReward = new UserReward(entry.getValue(), attraction, getRewardPoints(attraction, user));
+						userRewardsMap.put(user.getUserName(), newReward);
+					}
+				}
+			}
+		}
+
+		// Wait all the threads are ended
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+
+
+		// Update the user rewards
+		/*for (Map.Entry<String, UserReward> entry: userRewardsMap.entrySet()){
+			user.addUserReward(entry.getValue());
+		}*/
+		userRewardsMap.forEach((key, value) -> user.addUserReward(value));
+
+
+		/*List<VisitedLocation> userLocations = user.getVisitedLocations();
+		List<Attraction> attractions = gpsUtil.getAttractions();
+
 		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
 				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
@@ -48,7 +98,7 @@ public class RewardsService {
 					}
 				}
 			}
-		}
+		}*/
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
