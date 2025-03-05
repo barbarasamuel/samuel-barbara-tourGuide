@@ -56,7 +56,7 @@ public class RewardsService {
 		Map<String, UserReward> userRewardsMap = new ConcurrentHashMap<>();
 
 		for (UserReward reward : user.getUserRewards()) {
-			userRewardsMap.put(user.getUserName(), reward);
+			userRewardsMap.put(reward.attraction.attractionName, reward);
 		}
 
 		for (Map.Entry<Location, VisitedLocation> entry: userVisitedLocationMap.entrySet()) {
@@ -66,7 +66,7 @@ public class RewardsService {
 				if (!userRewardsMap.containsKey(attraction.attractionName)) {
 					if (nearAttraction(entry.getValue(), attraction)) {
 						UserReward newReward = new UserReward(entry.getValue(), attraction, getRewardPoints(attraction, user));
-						userRewardsMap.put(user.getUserName(), newReward);
+						userRewardsMap.put(newReward.attraction.attractionName, newReward);
 					}
 				}
 			}
@@ -85,7 +85,6 @@ public class RewardsService {
 			user.addUserReward(entry.getValue());
 		}*/
 		userRewardsMap.forEach((key, value) -> user.addUserReward(value));
-
 
 		/*List<VisitedLocation> userLocations = user.getVisitedLocations();
 		List<Attraction> attractions = gpsUtil.getAttractions();
