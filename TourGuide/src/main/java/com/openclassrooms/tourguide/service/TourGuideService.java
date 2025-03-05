@@ -97,7 +97,9 @@ public class TourGuideService {
 
 	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<Attraction> nearbyAttractions = new ArrayList<>();
+
 		for (Attraction attraction : gpsUtil.getAttractions()) {
+			//if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
 			if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
 				nearbyAttractions.add(attraction);
 			}

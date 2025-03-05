@@ -1,8 +1,6 @@
 package com.openclassrooms.tourguide.service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.scheduling.annotation.Async;
@@ -15,6 +13,8 @@ import gpsUtil.location.VisitedLocation;
 import rewardCentral.RewardCentral;
 import com.openclassrooms.tourguide.user.User;
 import com.openclassrooms.tourguide.user.UserReward;
+
+import static com.google.common.collect.Iterables.contains;
 
 @Service
 public class RewardsService {
@@ -101,11 +101,25 @@ public class RewardsService {
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
-		return getDistance(attraction, location) > attractionProximityRange ? false : true;
+		//return getDistance(attraction, location) > attractionProximityRange ? false : true;
+
+		List<Attraction> attractionsList = new ArrayList<>(gpsUtil.getAttractions());
+		List<Attraction> nearestFiveAttractions = new ArrayList<>();
+
+		// Attractions sort by distance
+		attractionsList.sort(Comparator.comparingDouble(attractionlocation ->
+				getDistance(new Location(attractionlocation.latitude, attractionlocation.longitude), location)
+		));
+
+		// Get the five first locations
+		nearestFiveAttractions = attractionsList.subList(0, Math.min(5, attractionsList.size()));
+
+		return nearestFiveAttractions.stream().anyMatch(a -> a.attractionName.equals(attraction.attractionName));
 	}
 	
 	private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
-		return getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
+	//return getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
+		return !(getDistance(attraction, visitedLocation.location) > proximityBuffer);
 	}
 	
 	private int getRewardPoints(Attraction attraction, User user) {
