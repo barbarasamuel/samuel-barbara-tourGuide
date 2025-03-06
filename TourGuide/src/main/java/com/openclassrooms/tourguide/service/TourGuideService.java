@@ -1,5 +1,6 @@
 package com.openclassrooms.tourguide.service;
 
+import com.openclassrooms.tourguide.dto.AttractionDTO;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
@@ -27,6 +28,7 @@ import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 
+import rewardCentral.RewardCentral;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
@@ -114,6 +116,28 @@ public class TourGuideService {
 				tracker.stopTracking();
 			}
 		});
+	}
+
+	public List<AttractionDTO> getAttractionsList(VisitedLocation visitedLocation){
+		List<AttractionDTO> attractionsList = new ArrayList<>();
+		List<Attraction> nearByAttractionsList = new ArrayList<>(getNearByAttractions(visitedLocation));
+		RewardCentral rewardCentral = new RewardCentral();
+
+		attractionsList = nearByAttractionsList.stream()
+				.map(attraction -> {
+					AttractionDTO attractionDTO = new AttractionDTO();
+					attractionDTO.setTouristAttractionName(attraction.attractionName);
+					attractionDTO.setAttractionLatitude(attraction.latitude);
+					attractionDTO.setAttractionLongitude(attraction.longitude);
+					attractionDTO.setUserLocationLatitude(visitedLocation.location.latitude);
+					attractionDTO.setUserLocationLongitude(visitedLocation.location.longitude);
+					attractionDTO.setDistanceInMiles(rewardsService.getDistance(new Location(attraction.latitude, attraction.longitude), visitedLocation.location));
+					attractionDTO.setRewardPoints((long) rewardCentral.getAttractionRewardPoints(attraction.attractionId, visitedLocation.userId));
+			return attractionDTO;
+		})
+				.collect(Collectors.toList());
+
+		return attractionsList;
 	}
 
 	/**********************************************************************************
