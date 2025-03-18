@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -62,8 +63,11 @@ public class TourGuideService {
 	}
 
 	public VisitedLocation getUserLocation(User user) {
+		List<User> usersList = new ArrayList<>();
+		usersList.add(user);
+
 		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ? user.getLastVisitedLocation()
-				: trackUserLocation(user);
+				: trackUserLocation(usersList);
 		return visitedLocation;
 	}
 
@@ -90,10 +94,23 @@ public class TourGuideService {
 		return providers;
 	}
 
-	public VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
+	public VisitedLocation trackUserLocation(List<User> users) {
+
+		VisitedLocation visitedLocation = gpsUtil.getUserLocation(users.get(0).getUserId());
+
+		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
+				users.forEach(user-> user.addToVisitedLocations(gpsUtil.getUserLocation(user.getUserId()))
+		), executor);
+
+		future.exceptionally(ex -> {
+			System.err.println("Task error : " + ex.getMessage());
+			return null;
+		});
+		future.whenComplete((result, throwable) -> executor.shutdown());
+
+		users.parallelStream().forEach(user -> rewardsService.calculateRewards(user));
+
 		return visitedLocation;
 	}
 
