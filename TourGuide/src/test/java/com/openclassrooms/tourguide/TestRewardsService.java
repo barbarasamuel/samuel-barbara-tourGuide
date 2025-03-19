@@ -38,6 +38,11 @@ public class TestRewardsService {
 
 		usersList.add(user);
 		tourGuideService.trackUserLocation(usersList);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		List<UserReward> userRewards = user.getUserRewards();
 		tourGuideService.tracker.stopTracking();
 		assertTrue(userRewards.size() == 1);
@@ -62,6 +67,11 @@ public class TestRewardsService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
 		rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
+		try {
+			Thread.sleep(12500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
 		tourGuideService.tracker.stopTracking();
 
