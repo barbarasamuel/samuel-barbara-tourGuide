@@ -33,7 +33,9 @@ jobs:
         path: ~/.m2
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
-          ${{ runner.os }}-maven
+          ${{ runner.os }}-maven-
+          ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+
           
     - name: Build and test with Maven
       run: mvn clean compile test --file TourGuide/pom.xml
