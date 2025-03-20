@@ -68,7 +68,7 @@ public class TestRewardsService {
 
 		rewardsService.calculateRewards(tourGuideService.getAllUsers().get(0));
 		try {
-			Thread.sleep(12500);
+			Thread.sleep(14000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
