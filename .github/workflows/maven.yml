@@ -36,7 +36,8 @@ jobs:
           ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
     - name: Installation des dépendances
-      run: mvn clean compile install --file TourGuide/pom.xml
+      run: mvn install:install-file -Dfile="TourGuide//libs/gpsUtil.jar" -DgroupId="gpsUtil" -DartifactId=gpsUtil -Dversion="1.0.0" -Dpackaging="jar"
+      #run: mvn clean compile install --file TourGuide/pom.xml
       
     - name: Build and test with Maven
       run: mvn test --file TourGuide/pom.xml
