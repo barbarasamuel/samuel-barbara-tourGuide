@@ -42,8 +42,3 @@ jobs:
     - name: Build and package with Maven
       run: mvn clean package --file TourGuide/pom.xml
       
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: artifactTourGuide
-        path: target/*.jar
